@@ -24,7 +24,10 @@ THE SOFTWARE.
 
 """
 
+import time
+
 from . import ivi
+
 
 # Exceptions
 class FrequencyListUnknownException(ivi.IviException): pass
@@ -1176,7 +1179,7 @@ class ALC(ivi.IviContainer):
         return self._alc_bandwidth
     
     def _set_alc_bandwidth(self, bandwidth):
-        value = float(value)
+        value = float(bandwidth)
         self._alc_bandwidth = value
     
     def _alc_configure(self, source, bandwidth):
@@ -1218,7 +1221,7 @@ class ReferenceOscillator(ivi.IviContainer):
         return self._reference_oscillator_external_frequency
     
     def _set_reference_oscillator_external_frequency(self, external_frequency):
-        value = float(value)
+        value = float(external_frequency)
         self._reference_oscillator_external_frequency = value
     
     def _reference_oscillator_configure(self, source, external_frequency):
