@@ -53,7 +53,8 @@ __all__ = [
         "lecroy",
         "rigol",
         "tektronix",
-        "testequity"]
+        "testequity",
+        "rs"]
 
 from .ivi import *
 from . import *
