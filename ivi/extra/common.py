@@ -86,13 +86,13 @@ class Memory(ivi.IviContainer):
     def _memory_save(self, index):
         index = int(index)
         if index < 0 or index >= self._memory_size:
-            raise OutOfRangeException()
+            raise ivi.OutOfRangeException()
         pass
 
     def _memory_recall(self, index):
         index = int(index)
         if index < 0 or index >= self._memory_size:
-            raise OutOfRangeException()
+            raise ivi.OutOfRangeException()
         pass
 
 

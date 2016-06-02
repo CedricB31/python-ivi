@@ -1622,9 +1622,9 @@ class DigitalModulationBase(ivi.IviContainer):
             raise ivi.ValueNotSupportedException()
         self._digital_modulation_base_external_clock_type = value
     
-    def _digital_modulation_base_configure_clock_source(self, source, type):
+    def _digital_modulation_base_configure_clock_source(self, source, types):
         self._set_digital_modulation_base_clock_source(source)
-        self._set_digital_modulation_base_external_clock_type(type)
+        self._set_digital_modulation_base_external_clock_type(types)
     
     def _digital_modulation_base_create_bit_sequence(self, name, bit_count, sequence, more_data_pending):
         pass
@@ -1812,9 +1812,9 @@ class TDMABase(ivi.IviContainer):
             raise ivi.ValueNotSupportedException()
         self._digital_modulation_tdma_external_clock_type = value
     
-    def _digital_modulation_tdma_configure_clock_source(self, source, type):
+    def _digital_modulation_tdma_configure_clock_source(self, source, types):
         self._set_digital_modulation_tdma_clock_source(source)
-        self._set_digital_modulation_tdma_external_clock_type(type)
+        self._set_digital_modulation_tdma_external_clock_type(types)
     
     
 

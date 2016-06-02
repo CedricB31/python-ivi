@@ -130,14 +130,14 @@ class Memory(extra.common.Memory):
     def _memory_save(self, index):
         index = int(index)
         if index < 0 or index >= self._memory_size:
-            raise OutOfRangeException()
+            raise ivi.OutOfRangeException()
         if not self._driver_operation_simulate:
             self._write("*sav %d" % (index + self._memory_offset))
     
     def _memory_recall(self, index):
         index = int(index)
         if index < 0 or index >= self._memory_size:
-            raise OutOfRangeException()
+            raise ivi.OutOfRangeException()
         if not self._driver_operation_simulate:
             self._write("*rcl %d" % (index + self._memory_offset))
             self.driver_operation.invalidate_all_attributes()

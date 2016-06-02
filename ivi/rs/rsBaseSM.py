@@ -2,16 +2,20 @@ from .. import ivi
 from .. import rfsiggen
 from .. import scpi 
 from ..rfsiggen import TriggerSource
+from ..rfsiggen import IQSource
+from ..rfsiggen import LFGeneratorWaveform
+
 import os
 
+class rsSettingConflictException(ivi.IviException): pass
 
 class rsBaseSM(scpi.common.IdnCommand, scpi.common.ErrorQuery,
                scpi.common.Reset, scpi.common.SelfTest, scpi.common.Memory,
-               rfsiggen.AnalogModulationSource, rfsiggen.ModulateIQ,
+               rfsiggen.ModulateIQ,
                rfsiggen.Base, rfsiggen.ModulateAM,
-               rfsiggen.ModulateFM, rfsiggen.ModulatePM,
+               rfsiggen.LFGenerator, rfsiggen.LFGeneratorOutput,
                rfsiggen.IQImpairment, rfsiggen.ArbGenerator,
-               rfsiggen.DigitalModulationBase, ivi.Driver):
+               ivi.Driver):
     
     "Rohde & Schwarz SM... series IVI RF signal generator driver" 
     
@@ -108,6 +112,98 @@ class rsBaseSM(scpi.common.IdnCommand, scpi.common.ErrorQuery,
         self._rf_output_enabled = value
         self._set_cache_valid()
         
+#LFGenerator
+    def _get_lf_generator_frequency(self):
+        try : 
+            self._lf_generator_frequency = float(self._ask(":SOUR:LFO:FREQ?"))
+        except ValueError: 
+            self._lf_generator_frequency = 0.0
+        self._set_cache_valid()
+        return self._lf_generator_frequency
+    
+    def _set_lf_generator_frequency(self, value):
+        value = float(value)
+        self._write(":SOUR:LFO:FREQ %e" % value)
+        self._lf_generator_frequency = value
+        self._set_cache_valid()
+        
+    def _get_lf_generator_waveform(self):
+        try : 
+            self._lf_generator_waveform = self._ask(":SOUR:LFO:SHAP?")
+        except ValueError: 
+            self._lf_generator_waveform = 'sine'
+        self._set_cache_valid()     
+        return self._lf_generator_waveform
+    
+    def _set_lf_generator_waveform(self, value):
+        if value not in LFGeneratorWaveform:
+            raise ivi.ValueNotSupportedException()
+        self._write(":SOUR:LFO:SHAP %s" % value)
+        self._lf_generator_waveform = value
+        self._set_cache_valid()
+
+    def _get_lf_generator_output_amplitude(self):
+        try : 
+            self._lf_generator_output_amplitude = float(self._ask(":SOUR:LFO:VOLT?"))
+        except ValueError: 
+            self._lf_generator_output_amplitude = 1.000
+        self._set_cache_valid()     
+        return self._lf_generator_output_amplitude
+    
+    def _set_lf_generator_output_amplitude(self, value):
+        value = float(value)
+        self._write(":SOUR:LFO:VOLT %e" % value)
+        self._lf_generator_output_amplitude = value
+        self._set_cache_valid()
+         
+    def _get_lf_generator_output_enabled(self):
+        try : 
+            self._lf_generator_output_enabled = bool(int(self._ask(":SOUR:LFO:STAT?")))
+        except ValueError: 
+            self._lf_generator_output_enabled = False
+        self._set_cache_valid()     
+        return self._lf_generator_output_enabled
+    
+    def _set_lf_generator_output_enabled(self, value):
+        value = bool(value)
+        self._write(":SOUR:LFO:STAT %d" %int(value))
+        self._lf_generator_output_enabled = value
+        self._set_cache_valid()
+        
+#Modulate IQ 
+    def _get_iq_enabled(self):
+        try : 
+            self._iq_enabled = bool(int(self._ask(":SOUR:IQ:STAT?")))
+        except ValueError: 
+            self._iq_enabled = 0
+        self._set_cache_valid()
+        return self._iq_enabled
+    
+    def _set_iq_enabled(self, value):
+        value = bool(value)
+        self._write(":SOUR:IQ:STAT %d" % int(value))
+        self._iq_enabled = value
+        self._set_cache_valid()
+    
+    def _get_iq_source(self):
+        return self._iq_source
+    
+    def _set_iq_source(self, value):
+        if value not in IQSource:
+            raise ivi.ValueNotSupportedException()
+        self._write(":SOUR:BB:ARB:STAT 0")
+        self._write(":SOUR:BB:DM:STAT 0")
+        if value == 'external':
+            self._write(":SOUR:IQ:SOUR ANAL")
+        if value == 'arb_generator':
+            self._write(":SOUR:IQ:SOUR BAS")
+            self._write(":SOUR:BB:ARB:STAT 1")
+        if value == 'digital_modulation_base':
+            self._write(":SOUR:IQ:SOUR BAS")
+            self._write(":SOUR:BB:DM:STAT 1")
+        self._iq_source = value
+        self._set_cache_valid()  
+              
 #ArbGenerator    
     def _get_digital_modulation_arb_selected_waveform(self):
         try : 
@@ -121,6 +217,7 @@ class rsBaseSM(scpi.common.IdnCommand, scpi.common.ErrorQuery,
         value = str(value)
         self._write(":SOUR:BB:ARB:WAV:SEL '%s'" % value)
         self._digital_modulation_arb_selected_waveform = value
+        self._set_cache_valid()
     
     def _get_digital_modulation_arb_clock_frequency(self):
         try : 
@@ -134,13 +231,25 @@ class rsBaseSM(scpi.common.IdnCommand, scpi.common.ErrorQuery,
         value = float(value)
         self._write(":SOUR:BB:ARB:WAV:CLOCK '%e'" % value)
         self._digital_modulation_arb_clock_frequency = value
-        def _get_digital_modulation_arb_trigger_source(self):
+        self._set_cache_valid()
+    
+    def _get_digital_modulation_arb_trigger_source(self):
         return self._digital_modulation_arb_trigger_source
     
     def _set_digital_modulation_arb_trigger_source(self, value):
         if value not in TriggerSource:
             raise ivi.ValueNotSupportedException()
+        if value == "immediate":
+            self._write(":SOUR:BB:ARB:TRIG:SEQ AUTO") 
+        if value == "external":
+            self._write(":SOUR:BB:ARB:TRIG:SEQ SING")
+            self._write(":SOUR:BB:ARB:TRIG:SOUR EXT")
+        if value == "software":
+            self._write(":SOUR:BB:ARB:TRIG:SEQ SING")
+            self._write(":SOUR:BB:ARB:TRIG:SOUR INT")
         self._digital_modulation_arb_trigger_source = value
+        self._set_cache_valid()
+        
 #Custom field
     def _write_from_file_to_instrument(self, source, destination):
         data = open(source, 'rb').read()
